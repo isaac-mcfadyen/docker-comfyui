@@ -1,0 +1,25 @@
+version: "3"
+services:
+  comfyui:
+    build: .
+    ports:
+      # Web UI is exposed on port 8188 inside the container.
+      - "8188:8188"
+    environment:
+      # Set to a commit hash here to build and use that commit instead of the latest.
+      COMFYUI_COMMIT: "master"
+      # Set to "true" on some older GPUs (RTX 2xxx, some RTX 3xxx) to
+      # use greater speedups than the default PyTorch Cross Attention.
+      USE_XFORMERS: "false"
+    volumes:
+      # Since a lot of custom nodes in ComfyUI are stateful, we need to persist the whole
+      # folder across reboots to ensure they don't redownload their models or data on every container restart.
+      - ./comfyui:/comfyui
+    # Make sure you've installed the NVIDIA Container Toolkit and restart the Docker daemon before first use.
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
